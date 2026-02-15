@@ -35,9 +35,12 @@ def get_pipeline(
     sagemaker_session = sagemaker.Session()
     
     # Pipeline parameters
+    # Author: Rajinikanth Vadla
+    # Using ml.t3.medium for processing (more commonly available, lower cost)
+    # Using ml.m5.xlarge for training (can be changed if quota issues)
     processing_instance_type = ParameterString(
         name="ProcessingInstanceType",
-        default_value="ml.m5.large"
+        default_value="ml.t3.medium"
     )
     training_instance_type = ParameterString(
         name="TrainingInstanceType",
@@ -203,8 +206,8 @@ def get_pipeline(
         model=model,
         content_types=["text/csv"],
         response_types=["text/csv"],
-        inference_instances=["ml.m5.large", "ml.m5.xlarge"],
-        transform_instances=["ml.m5.large"],
+        inference_instances=["ml.t3.medium", "ml.m5.large", "ml.m5.xlarge"],
+        transform_instances=["ml.t3.medium", "ml.m5.large"],
         model_package_group_name="churn-prediction-models",
         approval_status=model_approval_status
     )
