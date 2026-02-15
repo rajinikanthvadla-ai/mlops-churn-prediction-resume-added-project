@@ -36,11 +36,11 @@ def get_pipeline(
     
     # Pipeline parameters
     # Author: Rajinikanth Vadla
-    # Using ml.t2.medium for processing (valid instance type, lower cost)
+    # Using ml.t3.medium for processing (valid instance type, lower cost)
     # Note: If quota issues, try ml.m4.xlarge or request quota increase
     processing_instance_type = ParameterString(
         name="ProcessingInstanceType",
-        default_value="ml.t2.medium"
+        default_value="ml.t3.medium"
     )
     training_instance_type = ParameterString(
         name="TrainingInstanceType",
