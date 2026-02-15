@@ -56,9 +56,19 @@ def get_pipeline(
     )
     
     # Step 1: Data Preprocessing
+    # Author: Rajinikanth Vadla
+    # Get sklearn processing image URI using SageMaker SDK
+    sklearn_image_uri = sagemaker.image_uris.retrieve(
+        framework="sklearn",
+        region=region,
+        version="1.0-1",
+        py_version="py3",
+        instance_type="ml.t3.medium"  # Use a valid instance type for image retrieval
+    )
+    
     sklearn_processor = ScriptProcessor(
         role=role_arn,
-        image_uri="763104351884.dkr.ecr.us-east-1.amazonaws.com/sklearn-processing:1.0-1.cpu",
+        image_uri=sklearn_image_uri,
         command=["python3"],
         instance_type=processing_instance_type,
         instance_count=1,
@@ -149,9 +159,10 @@ def get_pipeline(
     # Author: Rajinikanth Vadla
     # Note: MLflow logging will be handled later when EKS is deployed
     # For now, evaluation saves metrics to S3 (evaluate.py handles missing MLflow gracefully)
+    # Use same sklearn image URI as preprocessing
     evaluate_processor = ScriptProcessor(
         role=role_arn,
-        image_uri="763104351884.dkr.ecr.us-east-1.amazonaws.com/sklearn-processing:1.0-1.cpu",
+        image_uri=sklearn_image_uri,
         command=["python3"],
         instance_type=processing_instance_type,
         instance_count=1,
