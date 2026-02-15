@@ -49,6 +49,7 @@ jobs:
           SAGEMAKER_ROLE_ARN: ${{ secrets.SAGEMAKER_ROLE_ARN }}
           S3_BUCKET: ${{ secrets.S3_BUCKET }}
         run: |
+          export PYTHONPATH="${PYTHONPATH}:${PWD}"
           python scripts/create_pipeline.py ${{ secrets.SAGEMAKER_ROLE_ARN }} ${{ secrets.S3_BUCKET }}
 
       - name: Trigger SageMaker Pipeline

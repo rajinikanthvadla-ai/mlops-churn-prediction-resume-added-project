@@ -2,6 +2,10 @@
 
 import os
 import sys
+
+# Add project root to Python path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import boto3
 from pipelines.pipeline_definition import get_pipeline
 
