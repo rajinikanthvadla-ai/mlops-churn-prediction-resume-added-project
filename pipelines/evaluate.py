@@ -8,9 +8,17 @@ import json
 import pandas as pd
 import xgboost as xgb
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, confusion_matrix, classification_report
-import mlflow
-import mlflow.xgboost
 import numpy as np
+
+# Author: Rajinikanth Vadla
+# MLflow is optional - only import if available
+try:
+    import mlflow
+    import mlflow.xgboost
+    MLFLOW_AVAILABLE = True
+except ImportError:
+    MLFLOW_AVAILABLE = False
+    print("Warning: MLflow not available, skipping MLflow logging")
 
 def evaluate_model():
     parser = argparse.ArgumentParser()
@@ -21,10 +29,9 @@ def evaluate_model():
     parser.add_argument("--experiment-name", type=str, default="churn-prediction-evaluation")
     args = parser.parse_args()
     
-    # Setup MLflow
-    if args.mlflow_tracking_uri:
-        mlflow.set_tracking_uri(args.mlflow_tracking_uri)
-    mlflow.set_experiment(args.experiment_name)
+    # Setup MLflow (optional - only if available)
+    # Author: Rajinikanth Vadla
+    # MLflow setup is handled later in the script if available
     
     print("Loading model...")
     # Author: Rajinikanth Vadla
