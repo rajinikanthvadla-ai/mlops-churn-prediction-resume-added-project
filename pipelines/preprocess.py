@@ -37,11 +37,17 @@ def preprocess_data():
     df = df.drop("customerID", axis=1)
     
     # Encode binary columns
+    # Author: Rajinikanth Vadla
+    # Ensure Churn is encoded to 0/1 for XGBoost binary classification
     binary_cols = ["gender", "Partner", "Dependents", "PhoneService", 
-                   "PaperlessBilling", "Churn"]
+                   "PaperlessBilling"]
     for col in binary_cols:
         if col in df.columns:
             df[col] = df[col].map({"Yes": 1, "No": 0, "Male": 1, "Female": 0})
+    
+    # Encode Churn separately to ensure it's 0/1
+    if "Churn" in df.columns:
+        df["Churn"] = df["Churn"].map({"Yes": 1, "No": 0}).fillna(0).astype(int)
     
     # One-hot encode multi-category columns
     categorical_cols = ["Contract", "PaymentMethod", "InternetService"]
@@ -90,18 +96,27 @@ def preprocess_data():
     print(f"Train shape: {X_train.shape}, Validation shape: {X_val.shape}, Test shape: {X_test.shape}")
     
     # Save splits
+    # Author: Rajinikanth Vadla
+    # XGBoost requires: target as FIRST column, integer 0/1, no header
     os.makedirs(args.output_train, exist_ok=True)
     os.makedirs(args.output_validation, exist_ok=True)
     os.makedirs(args.output_test, exist_ok=True)
     os.makedirs(args.output_model, exist_ok=True)
     
-    train_data = pd.concat([X_train, y_train], axis=1)
-    val_data = pd.concat([X_val, y_val], axis=1)
-    test_data = pd.concat([X_test, y_test], axis=1)
+    # Ensure target is integer 0/1 (not float)
+    y_train = y_train.astype(int)
+    y_val = y_val.astype(int)
+    y_test = y_test.astype(int)
     
-    train_data.to_csv(os.path.join(args.output_train, "train.csv"), index=False)
-    val_data.to_csv(os.path.join(args.output_validation, "validation.csv"), index=False)
-    test_data.to_csv(os.path.join(args.output_test, "test.csv"), index=False)
+    # XGBoost expects target as FIRST column
+    train_data = pd.concat([y_train, X_train], axis=1)
+    val_data = pd.concat([y_val, X_val], axis=1)
+    test_data = pd.concat([y_test, X_test], axis=1)
+    
+    # Save without header (XGBoost CSV format requirement)
+    train_data.to_csv(os.path.join(args.output_train, "train.csv"), index=False, header=False)
+    val_data.to_csv(os.path.join(args.output_validation, "validation.csv"), index=False, header=False)
+    test_data.to_csv(os.path.join(args.output_test, "test.csv"), index=False, header=False)
     
     # Save preprocessing artifacts
     joblib.dump(scaler, os.path.join(args.output_model, "scaler.joblib"))
