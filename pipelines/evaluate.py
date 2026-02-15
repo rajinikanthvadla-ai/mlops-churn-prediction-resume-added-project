@@ -27,17 +27,56 @@ def evaluate_model():
     mlflow.set_experiment(args.experiment_name)
     
     print("Loading model...")
-    model_files = [f for f in os.listdir(args.model_dir) if f.endswith(".json")]
-    model_path = os.path.join(args.model_dir, model_files[0])
-    model = xgb.Booster()
-    model.load_model(model_path)
+    # Author: Rajinikanth Vadla
+    # SageMaker XGBoost saves model as model.tar.gz containing xgboost-model file
+    import tarfile
+    import tempfile
+    
+    # Find model.tar.gz file
+    model_tar = None
+    for f in os.listdir(args.model_dir):
+        if f.endswith(".tar.gz") or f == "model.tar.gz":
+            model_tar = os.path.join(args.model_dir, f)
+            break
+    
+    if not model_tar:
+        # Try to find any .tar.gz file
+        model_files = [f for f in os.listdir(args.model_dir) if f.endswith(".tar.gz")]
+        if model_files:
+            model_tar = os.path.join(args.model_dir, model_files[0])
+        else:
+            raise FileNotFoundError(f"No model.tar.gz found in {args.model_dir}")
+    
+    # Extract model.tar.gz to temp directory
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with tarfile.open(model_tar, "r:gz") as tar:
+            tar.extractall(tmpdir)
+        
+        # Find xgboost-model file (could be xgboost-model or model.json)
+        model_file = None
+        for root, dirs, files in os.walk(tmpdir):
+            for f in files:
+                if f == "xgboost-model" or f.endswith(".json"):
+                    model_file = os.path.join(root, f)
+                    break
+            if model_file:
+                break
+        
+        if not model_file:
+            raise FileNotFoundError(f"No xgboost-model file found in {model_tar}")
+        
+        model = xgb.Booster()
+        model.load_model(model_file)
     
     print("Loading test data...")
+    # Author: Rajinikanth Vadla
+    # Test data has NO header and target is FIRST column (from preprocess.py)
     test_files = [f for f in os.listdir(args.test_data) if f.endswith(".csv")]
-    test_df = pd.read_csv(os.path.join(args.test_data, test_files[0]))
+    test_df = pd.read_csv(os.path.join(args.test_data, test_files[0]), header=None)
     
-    X_test = test_df.drop("Churn", axis=1)
-    y_test = test_df["Churn"]
+    # First column is target, rest are features
+    y_test = test_df.iloc[:, 0].astype(int)
+    X_test = test_df.iloc[:, 1:]
     
     # Predictions
     dtest = xgb.DMatrix(X_test)
