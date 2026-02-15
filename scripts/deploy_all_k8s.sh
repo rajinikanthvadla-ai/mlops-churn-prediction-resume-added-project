@@ -1,5 +1,7 @@
 #!/bin/bash
 # scripts/deploy_all_k8s.sh
+# Author: Rajinikanth Vadla
+# Description: Deploys all services (MLflow, FastAPI, Streamlit) to EKS cluster
 
 set -e
 

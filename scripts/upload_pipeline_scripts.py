@@ -1,4 +1,6 @@
 # scripts/upload_pipeline_scripts.py
+# Author: Rajinikanth Vadla
+# Description: Uploads pipeline scripts (preprocess, train, evaluate) to S3 for SageMaker processing
 
 import os
 import boto3

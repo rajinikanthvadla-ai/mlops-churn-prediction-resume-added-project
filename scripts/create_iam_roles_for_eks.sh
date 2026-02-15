@@ -1,5 +1,7 @@
 #!/bin/bash
 # scripts/create_iam_roles_for_eks.sh
+# Author: Rajinikanth Vadla
+# Description: Creates IAM roles for EKS service accounts (IRSA) for MLflow and FastAPI
 
 set -e
 

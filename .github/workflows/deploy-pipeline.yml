@@ -1,11 +1,11 @@
 # .github/workflows/deploy-pipeline.yml
 
 name: Deploy SageMaker Pipeline
+# Author: Rajinikanth Vadla
+# Description: Manual workflow to deploy SageMaker ML pipeline
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 permissions:
   id-token: write
@@ -34,7 +34,12 @@ jobs:
 
       - name: Install Python Dependencies
         run: |
-          pip install boto3 sagemaker pandas numpy scikit-learn xgboost
+          # Author: Rajinikanth Vadla
+          # Install all required Python packages for SageMaker pipeline
+          python -m pip install --upgrade pip
+          pip install boto3 sagemaker==2.214.0 pandas numpy scikit-learn xgboost mlflow
+          # Verify sagemaker installation
+          python -c "import sagemaker; print(f'SageMaker version: {sagemaker.__version__}')"
 
       - name: Upload Pipeline Scripts to S3
         env:
@@ -49,6 +54,8 @@ jobs:
           SAGEMAKER_ROLE_ARN: ${{ secrets.SAGEMAKER_ROLE_ARN }}
           S3_BUCKET: ${{ secrets.S3_BUCKET }}
         run: |
+          # Author: Rajinikanth Vadla
+          # Set Python path and create/update SageMaker pipeline
           export PYTHONPATH="${PYTHONPATH}:${PWD}"
           python scripts/create_pipeline.py ${{ secrets.SAGEMAKER_ROLE_ARN }} ${{ secrets.S3_BUCKET }}
 

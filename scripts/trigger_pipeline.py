@@ -1,4 +1,6 @@
 # scripts/trigger_pipeline.py
+# Author: Rajinikanth Vadla
+# Description: Triggers SageMaker Pipeline execution and waits for completion
 
 import boto3
 import os

@@ -1,4 +1,6 @@
 # frontend/app.py
+# Author: Rajinikanth Vadla
+# Description: Streamlit web UI for customer churn prediction
 
 import streamlit as st
 import requests

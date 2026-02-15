@@ -1,4 +1,6 @@
 # pipelines/preprocess.py
+# Author: Rajinikanth Vadla
+# Description: Feature engineering and data preprocessing script for SageMaker Processing Job
 
 import argparse
 import os

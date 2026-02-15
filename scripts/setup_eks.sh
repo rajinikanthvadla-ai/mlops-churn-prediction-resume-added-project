@@ -1,5 +1,7 @@
 #!/bin/bash
 # scripts/setup_eks.sh
+# Author: Rajinikanth Vadla
+# Description: Creates EKS cluster for MLOps deployment
 
 set -e
 

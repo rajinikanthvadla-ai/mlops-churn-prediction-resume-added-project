@@ -1,4 +1,6 @@
 # mlflow/Dockerfile
+# Author: Rajinikanth Vadla
+# Description: MLflow tracking server with MySQL backend and S3 artifact storage
 
 FROM python:3.11-slim
 

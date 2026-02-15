@@ -1,9 +1,11 @@
 # scripts/create_pipeline.py
+# Author: Rajinikanth Vadla
+# Description: Creates or updates SageMaker Pipeline for churn prediction
 
 import os
 import sys
 
-# Add project root to Python path
+# Add project root to Python path so we can import pipelines module
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import boto3

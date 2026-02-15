@@ -1,4 +1,6 @@
 # pipelines/evaluate.py
+# Author: Rajinikanth Vadla
+# Description: Model evaluation script that logs metrics and artifacts to MLflow
 
 import argparse
 import os

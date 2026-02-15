@@ -1,4 +1,6 @@
 # pipelines/pipeline_definition.py
+# Author: Rajinikanth Vadla
+# Description: Defines complete SageMaker Pipeline with preprocessing, training, evaluation, and model registration
 
 import os
 import boto3

@@ -1,4 +1,6 @@
 # pipelines/train.py
+# Author: Rajinikanth Vadla
+# Description: XGBoost model training script with MLflow integration (reference implementation)
 
 import argparse
 import os

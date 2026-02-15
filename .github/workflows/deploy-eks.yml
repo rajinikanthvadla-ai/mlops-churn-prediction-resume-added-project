@@ -1,12 +1,10 @@
 # .github/workflows/deploy-eks.yml
 
 name: Deploy to EKS
+# Author: Rajinikanth Vadla
+# Description: Manual workflow to deploy EKS cluster with MLflow, FastAPI, and Streamlit
 
 on:
-  workflow_run:
-    workflows: ["Deploy SageMaker Pipeline"]
-    types:
-      - completed
   workflow_dispatch:
 
 permissions:

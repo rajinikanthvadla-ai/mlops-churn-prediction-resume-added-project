@@ -1,4 +1,6 @@
 # inference/app/main.py
+# Author: Rajinikanth Vadla
+# Description: FastAPI application for churn prediction API endpoints
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
