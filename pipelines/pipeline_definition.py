@@ -143,6 +143,9 @@ def get_pipeline(
     )
     
     # Step 3: Model Evaluation
+    # Author: Rajinikanth Vadla
+    # Note: MLflow logging will be handled later when EKS is deployed
+    # For now, evaluation saves metrics to S3 (evaluate.py handles missing MLflow gracefully)
     evaluate_processor = ScriptProcessor(
         role=role_arn,
         image_uri="763104351884.dkr.ecr.us-east-1.amazonaws.com/sklearn-processing:1.0-1.cpu",
@@ -173,11 +176,7 @@ def get_pipeline(
                 destination=f"s3://{bucket_name}/experiments/evaluation"
             )
         ],
-        code="s3://{}/pipelines/evaluate.py".format(bucket_name),
-        environment={
-            "MLFLOW_TRACKING_URI": f"http://mlflow.default.svc.cluster.local:5000",
-            "MLFLOW_EXPERIMENT_NAME": "churn-prediction-evaluation"
-        }
+        code="s3://{}/pipelines/evaluate.py".format(bucket_name)
     )
     
     # Step 4: Register Model (condition will be added later if needed)
