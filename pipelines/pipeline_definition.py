@@ -207,7 +207,7 @@ def get_pipeline(
         content_types=["text/csv"],
         response_types=["text/csv"],
         inference_instances=["ml.t2.medium", "ml.m5.large", "ml.m5.xlarge"],
-        transform_instances=["ml.t2.medium", "ml.m5.large"],
+        transform_instances=["ml.m4.xlarge", "ml.m5.large"],
         model_package_group_name="churn-prediction-models",
         approval_status=model_approval_status
     )
