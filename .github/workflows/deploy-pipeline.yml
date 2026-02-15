@@ -34,10 +34,29 @@ jobs:
 
       - name: Install Python Dependencies
         run: |
-          pip install boto3 sagemaker
+          pip install boto3 sagemaker pandas numpy scikit-learn xgboost
+
+      - name: Upload Pipeline Scripts to S3
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+        run: |
+          python scripts/upload_pipeline_scripts.py ${{ secrets.S3_BUCKET }}
+
+      - name: Create/Update SageMaker Pipeline
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          SAGEMAKER_ROLE_ARN: ${{ secrets.SAGEMAKER_ROLE_ARN }}
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+        run: |
+          python scripts/create_pipeline.py ${{ secrets.SAGEMAKER_ROLE_ARN }} ${{ secrets.S3_BUCKET }}
 
       - name: Trigger SageMaker Pipeline
         env:
           AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
           python scripts/trigger_pipeline.py
+
+      - name: Update Evaluation Script with MLflow URI
+        run: |
+          echo "MLflow URI will be set when EKS is deployed"

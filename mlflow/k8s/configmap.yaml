@@ -1,0 +1,11 @@
+# mlflow/k8s/configmap.yaml
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mlflow-config
+data:
+  S3_BUCKET: "mlops-churn-prediction-709055505508"
+  AWS_REGION: "us-east-1"
+  MLFLOW_BACKEND_STORE_URI: "mysql+pymysql://mlflow:mlflow_password@mysql:3306/mlflow"
+  MLFLOW_DEFAULT_ARTIFACT_ROOT: "s3://mlops-churn-prediction-709055505508/mlflow/artifacts"

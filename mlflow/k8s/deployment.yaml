@@ -1,0 +1,75 @@
+# mlflow/k8s/deployment.yaml
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mlflow-sa
+  annotations:
+    eks.amazonaws.com/role-arn: ${MLFLOW_IAM_ROLE_ARN}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mlflow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mlflow
+  template:
+    metadata:
+      labels:
+        app: mlflow
+    spec:
+      serviceAccountName: mlflow-sa
+      containers:
+      - name: mlflow
+        image: ${MLFLOW_IMAGE}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+        env:
+        - name: S3_BUCKET
+          valueFrom:
+            configMapKeyRef:
+              name: mlflow-config
+              key: S3_BUCKET
+        - name: AWS_REGION
+          valueFrom:
+            configMapKeyRef:
+              name: mlflow-config
+              key: AWS_REGION
+        - name: MLFLOW_BACKEND_STORE_URI
+          valueFrom:
+            configMapKeyRef:
+              name: mlflow-config
+              key: MLFLOW_BACKEND_STORE_URI
+        - name: MLFLOW_DEFAULT_ARTIFACT_ROOT
+          valueFrom:
+            configMapKeyRef:
+              name: mlflow-config
+              key: MLFLOW_DEFAULT_ARTIFACT_ROOT
+        - name: AWS_DEFAULT_REGION
+          value: us-east-1
+        command:
+        - /bin/sh
+        - -c
+        - |
+          /setup_mlflow.sh
+      initContainers:
+      - name: wait-for-mysql
+        image: busybox
+        command: ['sh', '-c', 'until nc -z mysql 3306; do echo waiting for mysql; sleep 2; done;']
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mlflow
+spec:
+  type: LoadBalancer
+  selector:
+    app: mlflow
+  ports:
+  - port: 80
+    targetPort: 5000
+    protocol: TCP

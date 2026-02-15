@@ -1,0 +1,45 @@
+# frontend/k8s/deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streamlit
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: streamlit
+  template:
+    metadata:
+      labels:
+        app: streamlit
+    spec:
+      containers:
+      - name: streamlit
+        image: ${STREAMLIT_IMAGE}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8501
+        env:
+        - name: FASTAPI_URL
+          value: "http://fastapi:80"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: streamlit
+spec:
+  type: LoadBalancer
+  selector:
+    app: streamlit
+  ports:
+  - port: 80
+    targetPort: 8501
+    protocol: TCP

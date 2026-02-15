@@ -1,0 +1,140 @@
+# .github/workflows/deploy-eks.yml
+
+name: Deploy to EKS
+
+on:
+  workflow_run:
+    workflows: ["Deploy SageMaker Pipeline"]
+    types:
+      - completed
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  CLUSTER_NAME: mlops-churn-cluster
+  ECR_REPO_MLFLOW: mlflow
+  ECR_REPO_FASTAPI: fastapi
+  ECR_REPO_STREAMLIT: streamlit
+
+jobs:
+  setup-eks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: github-actions-eks
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install eksctl
+        run: |
+          curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+          sudo mv /tmp/eksctl /usr/local/bin
+          eksctl version
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+          kubectl version --client
+
+      - name: Create EKS Cluster
+        run: |
+          chmod +x scripts/setup_eks.sh
+          export CLUSTER_NAME=${{ env.CLUSTER_NAME }}
+          export AWS_REGION=${{ env.AWS_REGION }}
+          ./scripts/setup_eks.sh
+
+  build-and-push-images:
+    needs: setup-eks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: github-actions-ecr
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Create ECR Repositories
+        run: |
+          aws ecr create-repository --repository-name ${{ env.ECR_REPO_MLFLOW }} --region ${{ env.AWS_REGION }} || true
+          aws ecr create-repository --repository-name ${{ env.ECR_REPO_FASTAPI }} --region ${{ env.AWS_REGION }} || true
+          aws ecr create-repository --repository-name ${{ env.ECR_REPO_STREAMLIT }} --region ${{ env.AWS_REGION }} || true
+
+      - name: Build and Push MLflow Image
+        run: |
+          docker build -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO_MLFLOW }}:latest mlflow/
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO_MLFLOW }}:latest
+
+      - name: Build and Push FastAPI Image
+        run: |
+          docker build -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO_FASTAPI }}:latest inference/
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO_FASTAPI }}:latest
+
+      - name: Build and Push Streamlit Image
+        run: |
+          docker build -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO_STREAMLIT }}:latest frontend/
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO_STREAMLIT }}:latest
+
+  deploy-to-eks:
+    needs: build-and-push-images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: github-actions-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+      - name: Configure kubectl
+        run: |
+          aws eks update-kubeconfig --name ${{ env.CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+
+      - name: Install envsubst
+        run: |
+          sudo apt-get update && sudo apt-get install -y gettext-base
+
+      - name: Deploy All Services
+        run: |
+          chmod +x scripts/deploy_all_k8s.sh
+          chmod +x scripts/create_iam_roles_for_eks.sh
+          export CLUSTER_NAME=${{ env.CLUSTER_NAME }}
+          export AWS_REGION=${{ env.AWS_REGION }}
+          export S3_BUCKET=${{ secrets.S3_BUCKET }}
+          ./scripts/deploy_all_k8s.sh
+
+      - name: Get Service URLs
+        run: |
+          echo "MLflow URL:"
+          kubectl get svc mlflow -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+          echo ""
+          echo "FastAPI URL:"
+          kubectl get svc fastapi -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+          echo ""
+          echo "Streamlit URL:"
+          kubectl get svc streamlit -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
