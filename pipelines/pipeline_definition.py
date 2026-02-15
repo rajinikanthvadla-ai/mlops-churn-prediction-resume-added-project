@@ -159,10 +159,10 @@ def get_pipeline(
     # Author: Rajinikanth Vadla
     # Note: MLflow logging will be handled later when EKS is deployed
     # For now, evaluation saves metrics to S3 (evaluate.py handles missing MLflow gracefully)
-    # Use same sklearn image URI as preprocessing
+    # Use XGBoost image for evaluation (has xgboost library to load model)
     evaluate_processor = ScriptProcessor(
         role=role_arn,
-        image_uri=sklearn_image_uri,
+        image_uri=xgboost_image_uri,
         command=["python3"],
         instance_type=processing_instance_type,
         instance_count=1,
