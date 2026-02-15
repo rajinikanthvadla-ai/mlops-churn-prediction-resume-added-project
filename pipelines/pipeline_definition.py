@@ -98,15 +98,22 @@ def get_pipeline(
     )
     
     # Step 2: Model Training
-    # Use SageMaker's built-in XGBoost algorithm
-    from sagemaker.xgboost.estimator import XGBoost
+    # Author: Rajinikanth Vadla
+    # Use SageMaker's built-in XGBoost algorithm (no custom script needed)
+    # Get XGBoost image URI for the region
+    xgboost_image_uri = sagemaker.image_uris.retrieve(
+        framework="xgboost",
+        region=region,
+        version="1.7-1",
+        py_version="py3"
+    )
     
-    estimator = XGBoost(
+    # Use standard Estimator with XGBoost image (built-in algorithm)
+    estimator = Estimator(
+        image_uri=xgboost_image_uri,
         role=role_arn,
         instance_type=training_instance_type,
         instance_count=1,
-        framework_version="1.7-1",
-        py_version="py3",
         hyperparameters={
             "max_depth": "6",
             "eta": "0.3",
@@ -174,13 +181,21 @@ def get_pipeline(
     )
     
     # Step 4: Register Model (condition will be added later if needed)
-    from sagemaker.xgboost.model import XGBoostModel
+    # Author: Rajinikanth Vadla
+    # Create model for registration using the same XGBoost image
+    from sagemaker.model import Model
     
-    model = XGBoostModel(
+    xgboost_image_uri = sagemaker.image_uris.retrieve(
+        framework="xgboost",
+        region=region,
+        version="1.7-1",
+        py_version="py3"
+    )
+    
+    model = Model(
+        image_uri=xgboost_image_uri,
         model_data=train_step.properties.ModelArtifacts.S3ModelArtifacts,
         role=role_arn,
-        framework_version="1.7-1",
-        py_version="py3",
         sagemaker_session=sagemaker_session
     )
     
