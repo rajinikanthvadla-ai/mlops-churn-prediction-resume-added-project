@@ -1,4 +1,4 @@
-# End-to-End MLOps Pipeline — Customer Churn Prediction
+# End-to-End MLOps Pipeline — Customer Churn Prediction.
 
 ## Overview
 
