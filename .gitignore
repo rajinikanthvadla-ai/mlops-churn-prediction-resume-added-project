@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+
+# SageMaker
+.sagemaker/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# AWS
+.aws/
+
+# Environment
+.env
+.venv
+venv/
+
+# MLflow
+mlruns/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Build
+build/
+dist/
+
+# Docker
+*.tar
