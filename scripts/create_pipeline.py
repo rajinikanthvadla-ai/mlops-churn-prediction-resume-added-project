@@ -47,8 +47,23 @@ def main():
     # Upsert pipeline (create or update)
     pipeline.upsert(role_arn=role_arn)
     
-    print(f"Pipeline 'churn-prediction-pipeline' created/updated successfully!")
-    print(f"Pipeline ARN: {pipeline.arn}")
+    pipeline_name = pipeline.name
+    print(f"Pipeline '{pipeline_name}' created/updated successfully!")
+    
+    # Get pipeline ARN after upsert
+    # Author: Rajinikanth Vadla
+    # Note: Pipeline object doesn't have .arn attribute, so we query it from AWS
+    try:
+        sagemaker_client = boto3.client("sagemaker", region_name=region)
+        pipeline_response = sagemaker_client.describe_pipeline(
+            PipelineName=pipeline_name
+        )
+        pipeline_arn = pipeline_response["PipelineArn"]
+        print(f"Pipeline ARN: {pipeline_arn}")
+    except Exception as e:
+        print(f"Pipeline created/updated successfully!")
+        print(f"Pipeline name: {pipeline_name}")
+        print(f"Note: Could not retrieve ARN (this is non-critical): {e}")
 
 if __name__ == "__main__":
     main()
